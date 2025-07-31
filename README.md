@@ -1,5 +1,5 @@
 ```
-Before running TMVA_BDTs.py and apply.py, please make sure the input and output are correct
+Before running TMVA_BDTs.py and apply.py, please make sure the input and output paths/names are correct
 
 0.To remove nan or inf entries
   root -l select.C
