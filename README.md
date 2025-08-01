@@ -18,7 +18,7 @@ or
   [3]c1->SaveAs("xxx.pdf")
 
 4.To get BDT scores for further optimization
-  python3 apply.py
+  python3 apply_BDT.py
 
 
 ```
