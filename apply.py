@@ -1,18 +1,16 @@
 import ROOT
-from ROOT import TMVA, TFile, TTree, TBranch, TCanvas, TH1F
+from ROOT import TMVA, TFile, TTree
 from array import array
-import os
+
 ROOT.gROOT.SetBatch(True)
 
 # -----------------------------
 # Configuration parameters
 # -----------------------------
-model_xml_path = "dataset_test1/weights/TMVAClassification_BDTs.weights.xml"  # Modify to the actual path
-#input_data_path = "../optimization/data_Bu_multi.root"
-input_data_path = "../optimization/MC_Bu.root"
+model_xml_path = "dataset_test3/weights/TMVAClassification_BDTs.weights.xml"
+input_data_path = "/user/u/u25lekai/work/analysis_B/selection/X_ppRef/root_files/sideband_PSI.root.root"
 tree_name = "tree"
-output_root = "BDT_applied_output.root"
-bdt_score_png = "BDT_score_distribution.png"
+output_root = "sideband_PSI_BDT.root"
 
 # -----------------------------
 # Load trained model
@@ -22,15 +20,25 @@ TMVA.PyMethodBase.PyInitialize()
 
 reader = TMVA.Reader("!Color:!Silent")
 
-# Create arrays to hold variable values
+# -----------------------------
+# Define input variables (must match training!)
+# -----------------------------
 B_alpha = array('f', [0.])
 B_trk1dR = array('f', [0.])
+B_trk2dR = array('f', [0.])
+B_trk1Pt = array('f', [0.])
+B_trk2Pt = array('f', [0.])
+B_norm_svpvDistance_2D = array('f', [0.])
+B_cos_dtheta = array('f', [0.])
 
-# Add variables to the reader
 reader.AddVariable("B_alpha", B_alpha)
 reader.AddVariable("B_trk1dR", B_trk1dR)
+reader.AddVariable("B_trk2dR", B_trk2dR)
+reader.AddVariable("B_trk1Pt", B_trk1Pt)
+reader.AddVariable("B_trk2Pt", B_trk2Pt)
+reader.AddVariable("B_norm_svpvDistance_2D", B_norm_svpvDistance_2D)
+reader.AddVariable("B_cos_dtheta", B_cos_dtheta)
 
-# Load the trained BDT model
 reader.BookMVA("BDT", model_xml_path)
 
 # -----------------------------
@@ -39,18 +47,18 @@ reader.BookMVA("BDT", model_xml_path)
 input_file = TFile.Open(input_data_path)
 tree = input_file.Get(tree_name)
 
-# Output file (optional: to save a new tree including BDT score)
+# -----------------------------
+# Prepare output file and tree
+# -----------------------------
 output_file = TFile.Open(output_root, "RECREATE")
-new_tree = tree.CloneTree(0)  # Create a new tree with the same structure
+output_tree = TTree("tree", "Tree with B_mass and BDT_score")
 
-# Add new branch: BDT score
+# Variables to store in output
+B_mass = array('f', [0.])
 bdt_score = array('f', [0.])
-bdt_branch = new_tree.Branch("BDT_score", bdt_score, "BDT_score/F")
 
-# -----------------------------
-# Prepare histogram
-# -----------------------------
-hist_bdt = ROOT.TH1F("hist_bdt", "BDT Score;BDT output;Events", 50, -1, 1)
+output_tree.Branch("B_mass", B_mass, "B_mass/F")
+output_tree.Branch("BDT_score", bdt_score, "BDT_score/F")
 
 # -----------------------------
 # Loop over events
@@ -60,39 +68,30 @@ print(f"Processing {nentries} entries...")
 
 for i in range(nentries):
     tree.GetEntry(i)
-    
-    # Assign values to variables
+
+    # Assign input variable values
     B_alpha[0] = getattr(tree, "B_alpha")
     B_trk1dR[0] = getattr(tree, "B_trk1dR")
-    
-    # Evaluate BDT output
+    B_trk2dR[0] = getattr(tree, "B_trk2dR")
+    B_trk1Pt[0] = getattr(tree, "B_trk1Pt")
+    B_trk2Pt[0] = getattr(tree, "B_trk2Pt")
+    B_norm_svpvDistance_2D[0] = getattr(tree, "B_norm_svpvDistance_2D")
+    B_cos_dtheta[0] = getattr(tree, "B_cos_dtheta")
+
+    # Evaluate BDT
     bdt_score[0] = reader.EvaluateMVA("BDT")
-    
-    # Fill histogram
-    hist_bdt.Fill(bdt_score[0])
-    
-    # Fill new tree
-    new_tree.Fill()
+
+    # Get B_mass
+    B_mass[0] = getattr(tree, "B_mass")
+
+    # Fill output tree
+    output_tree.Fill()
 
 # -----------------------------
-# Save results
+# Save output
 # -----------------------------
 output_file.cd()
-hist_bdt.Write()
-new_tree.Write()
-
-if not hist_bdt:
-    raise RuntimeError("Failed to create TH1F histogram!")
-c1 = TCanvas("c1", "BDT Output", 800, 600)
-hist_bdt.SetLineColor(ROOT.kBlue + 1)
-hist_bdt.SetLineWidth(2)
-hist_bdt.Draw("HIST")
-c1.SaveAs(bdt_score_png)
-print(f"BDT score plot saved to: {bdt_score_png}")
-
+output_tree.Write()
 output_file.Close()
-print(f"Output written to: {output_root}")
 
-# -----------------------------
-# Plotting
-# -----------------------------
+print(f"Output ROOT file saved: {output_root}")
