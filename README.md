@@ -10,7 +10,14 @@ Before running TMVA_BDTs.py and apply.py, please make sure the input and output 
 or
   ls -l log.txt
   cat log.txt
-3.To get BDT scores for further optimization
+3.To check the CorrelationMatrix with number
+  root -l TMVA_BDT.root
+  [0]dataset_***->cd()
+  [1]TH2F *corrS = (TH2F*)gDirectory->Get("CorrelationMatrixS");
+  [2]corrS->Draw("COLZ TEXT");
+  [3]c1->SaveAs("xxx.pdf")
+
+4.To get BDT scores for further optimization
   python3 apply.py
 
 
