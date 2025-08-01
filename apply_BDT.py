@@ -8,7 +8,7 @@ ROOT.gROOT.SetBatch(True)
 # Configuration parameters
 # -----------------------------
 model_xml_path = "dataset_test3/weights/TMVAClassification_BDTs.weights.xml"
-input_data_path = "/user/u/u25lekai/work/analysis_B/selection/X_ppRef/root_files/sideband_PSI.root.root"
+input_data_path = "/user/u/u25lekai/work/analysis_B/selection/X_ppRef/root_files/sideband_PSI.root"
 tree_name = "tree"
 output_root = "sideband_PSI_BDT.root"
 
