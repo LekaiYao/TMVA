@@ -91,7 +91,7 @@ for i in range(nentries):
 # Save output
 # -----------------------------
 output_file.cd()
-output_tree.Write()
+output_tree.Write("", ROOT.TObject.kOverwrite)
 output_file.Close()
 
 print(f"Output ROOT file saved: {output_root}")
